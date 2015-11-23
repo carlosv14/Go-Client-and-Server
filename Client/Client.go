@@ -15,6 +15,8 @@ func main() {
 		fmt.Println("1. Add User")
 		fmt.Println("2. Search User")
 		fmt.Println("3. Delete User")
+		fmt.Println("4. Send User")
+		fmt.Println("5. Exit")
 		fmt.Print("Opcion: ")
 		reader := bufio.NewReader(os.Stdin)
 		optxt,_:= reader.ReadString('\n')
@@ -36,8 +38,43 @@ func main() {
 				}
 			}
 		case 2:
-			fmt.Print("not this case")
-
+			conn, _ := net.Dial("tcp", "127.0.0.1:399")
+			conn.Write([]byte(optxt))
+			message:=""
+			for {
+				message, _ = bufio.NewReader(conn).ReadString('\n')
+				if message == "Enter User Name: \n" {
+					fmt.Print(message)
+					text, _ := reader.ReadString('\n')
+					conn.Write([]byte(text))
+				}else {
+					fmt.Println(message)
+					opcion = -1
+					conn.Close()
+					break
+				}
+			}
+		case 3:
+			conn, _ := net.Dial("tcp", "127.0.0.1:399")
+			conn.Write([]byte(optxt))
+			message:=""
+			for {
+				message, _ = bufio.NewReader(conn).ReadString('\n')
+				if message == "Enter User Name: \n" {
+					fmt.Print(message)
+					text, _ := reader.ReadString('\n')
+					conn.Write([]byte(text))
+				}else {
+					fmt.Println(message)
+					opcion = -1
+					conn.Close()
+					break
+				}
+			}
+		case 5:
+			conn, _ := net.Dial("tcp", "127.0.0.1:399")
+			conn.Write([]byte(optxt))
+			break
 		}
 	}
 }

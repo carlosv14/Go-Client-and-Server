@@ -5,20 +5,52 @@ import (
 	"bufio"
 	"strings"
 	"strconv"
-	"log"
 	"regexp"
 	"encoding/json"
+	"io/ioutil"
+	"os"
 )
 
 const _VALID_EMAIL = `\w[-._\w]*\w@\w[-._\w]*\w\.\w{2,3}`
 const _VALID_ID = `(\d{4}\-\d{4}\-\d{5})`
 const _VALID_DATE = `(?:0?[1-9]|[1-2]\d|3[01])\/(?:0?[1-9]|1[0-2])\/\d{4}`
-func EvalRegex(re,value string) bool{
-	regex, err := regexp.Compile(re)
-	if err != nil {
-		fmt.Println(err)
+
+func check(e error) int{
+	if e != nil {
+		fmt.Print(os.Stderr,e)
+		if strings.Contains(e.Error(),"An existing connection was forcibly closed") {
+			return 2
+		}
+		return 1
+	}
+	return 0
+}
+
+func WriteFile(u []User) bool{
+	usersFile, _ := json.Marshal(u)
+	err := ioutil.WriteFile("users.txt",usersFile,0644)
+	if err!=nil {
 		return false
 	}
+	return true
+}
+
+func ReadFile() []User{
+	var users []User
+	usersF,err := ioutil.ReadFile("users.txt")
+	if check(err)==0 {
+		err = json.Unmarshal(usersF,&users)
+		return users
+	}else{
+		fmt.Print("Error While Loading Users..")
+		return nil
+	}
+
+
+}
+func EvalRegex(re,value string) bool{
+	regex, err := regexp.Compile(re)
+	check(err)
 	if !regex.MatchString(value) {
 		return false
 	}
@@ -26,32 +58,26 @@ func EvalRegex(re,value string) bool{
 }
 
 type User struct  {
-	username,name,email,id,f_nac, foto string
+	Username,Name,Email,Id,F_nac, Foto string
 }
 
 
-func display(u User) {
-
-	fmt.Println("Username: " + u.username)
-	fmt.Println("Name: " + u.name)
-	fmt.Println("Email: " + u.email)
-	fmt.Println("ID: " + u.id)
-	fmt.Println("Birthdate: " + u.f_nac)
-	fmt.Println("Profile Picture: " + u.foto)
+func display(u User)string {
+	return "Username: " + u.Username  + " Name: " + u.Name  + " Email: " + u.Email + " ID: " + u.Id + " Birthdate: " + u.Foto + " Profile Picture: " + u.Foto +"\n"
 }
 
 func Unique(users []User,param string, paramtype int ) bool{
 	for _, element := range users {
 		if paramtype==0 {
-			if element.username == param {
+			if element.Username == param {
 				return false
 			}
 		}else if paramtype==1 {
-			if element.email == param {
+			if element.Email == param {
 				return false
 			}
 		}else if paramtype==2 {
-			if element.id == param{
+			if element.Id == param{
 				return false
 			}
 		}
@@ -59,20 +85,32 @@ func Unique(users []User,param string, paramtype int ) bool{
 	return true
 }
 
+func SearchUser(users[]User,username string) int{
+	for i,element:= range users{
+		if element.Username == strings.Split(username,"\r\n")[0]{
+			return i
+		}
+	}
+	return -1
+}
 
 func main() {
 	fmt.Println("Launching server...")
 	ln, _ := net.Listen("tcp", ":399")
 
 	var users []User
-	cont:=0
+	res:=ReadFile()
+	if res!=nil {
+		users = res
+	}
+
 	for {
 		  conn, _ := ln.Accept()
 		  message, _ := bufio.NewReader(conn).ReadString('\n')
 		  fmt.Print("Message Received:", string(message))
 		  opcion,err:= strconv.Atoi(strings.TrimSpace(string(message)))
 		if err!= nil {
-			log.Fatal(err)
+			fmt.Print(os.Stderr,err)
 		}else{
 			switch opcion {
 			case 1:
@@ -85,42 +123,72 @@ func main() {
 				img:=""
 				for {
 					conn.Write([]byte("Enter Username: " + "\n"))
-					username, _ = bufio.NewReader(conn).ReadString('\n')
+					username, err = bufio.NewReader(conn).ReadString('\n')
+					if check(err) ==2{
+						WriteFile(users)
+						os.Exit(0)
+					}
+					username = strings.Split(username,"\r\n")[0]
 					if Unique(users,username,0) && username!="" {
 						break
 					}
 				}
 				for {
 					conn.Write([]byte("Enter Name : " + "\n"))
-					name, _ = bufio.NewReader(conn).ReadString('\n')
+					name, err = bufio.NewReader(conn).ReadString('\n')
+					if check(err) ==2{
+						WriteFile(users)
+						os.Exit(0)
+					}
+					name = strings.Split(name,"\r\n")[0]
 					if name!="" {
 						break
 					}
 				}
 				for {
-				conn.Write([]byte("Enter E-mail : " + "\n"))
-				email,_= bufio.NewReader(conn).ReadString('\n')
+					conn.Write([]byte("Enter E-mail : " + "\n"))
+					email,err= bufio.NewReader(conn).ReadString('\n')
+					if check(err) ==2{
+						WriteFile(users)
+						os.Exit(0)
+					}
+					email = strings.Split(email,"\r\n")[0]
 					if EvalRegex(_VALID_EMAIL,email)  && Unique(users,email,1) && email!=""{
 						break
 					}
 				}
 				for {
 					conn.Write([]byte("Enter ID : " + "\n"))
-					id, _ = bufio.NewReader(conn).ReadString('\n')
+					id, err = bufio.NewReader(conn).ReadString('\n')
+					if check(err) ==2{
+						WriteFile(users)
+						os.Exit(0)
+					}
+					id = strings.Split(id,"\r\n")[0]
 					if id!="" && EvalRegex(_VALID_ID,id) && Unique(users,id,2)   {
 						break
 					}
 				}
 				for {
 					conn.Write([]byte("Enter Birth Date : " + "\n"))
-					bday, _ = bufio.NewReader(conn).ReadString('\n')
+					bday, err = bufio.NewReader(conn).ReadString('\n')
+					if check(err) ==2{
+						WriteFile(users)
+						os.Exit(0)
+					}
+					bday = strings.Split(bday,"\r\n")[0]
 					if EvalRegex(_VALID_DATE,bday) && bday!="" {
 						break
 					}
 				}
 				for {
 					conn.Write([]byte("Enter Profile Image : " + "\n"))
-					img, _ = bufio.NewReader(conn).ReadString('\n')
+					img, err = bufio.NewReader(conn).ReadString('\n')
+					if check(err) ==2{
+						WriteFile(users)
+						os.Exit(0)
+					}
+					img = strings.Split(img,"\r\n")[0]
 					if(img!=""){
 						break
 					}
@@ -128,18 +196,52 @@ func main() {
 				if(img!="" && name!="" && email!="" && id!="" && bday!="" && username!=""){
 				user:= User{username,name,email,id,bday,img}
 				users = append(users,user)
-				cont = cont+1
-				fmt.Print(cont)
-					if cont==2 {
-						b,_ := json.Marshal(users)
-						fmt.Print(b)
-
-					}
 				}
 				conn.Write([]byte("Success\n"))
+
+			case 2:
+				conn.Write([]byte("Enter User Name: " + "\n"))
+				search, err := bufio.NewReader(conn).ReadString('\n')
+				if check(err) ==2{
+					WriteFile(users)
+					os.Exit(0)
+				}else {
+					pos := SearchUser(users, search)
+					if pos >= 0 {
+						conn.Write([]byte(display(users[pos])))
+					}else{
+						conn.Write([]byte("not Found!" + "\n"))
+					}
+
+			    }
+			case 3:
+				conn.Write([]byte("Enter User Name: " + "\n"))
+				search, err := bufio.NewReader(conn).ReadString('\n')
+				if check(err) ==2{
+					WriteFile(users)
+					os.Exit(0)
+				}else {
+					pos := SearchUser(users, search)
+					if pos >= 0 {
+						users = append(users[:pos],users[pos+1:]...)
+						conn.Write([]byte("Success \n"))
+						WriteFile(users)
+					}else{
+						conn.Write([]byte("not Found!" + "\n"))
+					}
+
+				}
+
+			case 5:
+				b,err:= json.Marshal(users)
+				check(err)
+				fmt.Print(string(b))
+				if WriteFile(users) {
+						fmt.Print("Succesfully Saved")
+				}
 			}
 		}
 
-		 }
+	}
 }
 
