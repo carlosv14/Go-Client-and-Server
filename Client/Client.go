@@ -71,6 +71,28 @@ func main() {
 					break
 				}
 			}
+		case 4:
+			conn, _ := net.Dial("tcp", "127.0.0.1:399")
+			conn.Write([]byte(optxt))
+			message:=""
+			for {
+				message, _ = bufio.NewReader(conn).ReadString('\n')
+				if message == "Enter User Name: \n" {
+					fmt.Print(message)
+					text, _ := reader.ReadString('\n')
+					conn.Write([]byte(text))
+
+				}else if message == "Enter Email Recipient: \n" {
+					fmt.Print(message)
+					text, _ := reader.ReadString('\n')
+					conn.Write([]byte(text))
+				}else {
+					fmt.Println(message)
+					opcion = -1
+					conn.Close()
+					break
+				}
+			}
 		case 5:
 			conn, _ := net.Dial("tcp", "127.0.0.1:399")
 			conn.Write([]byte(optxt))

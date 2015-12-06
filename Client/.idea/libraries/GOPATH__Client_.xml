@@ -1,0 +1,17 @@
+<component name="libraryTable">
+  <library name="GOPATH &lt;Client&gt;">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../../../src/code.google.com" />
+      <root url="file://$PROJECT_DIR$/../../../src/github.com" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <excluded>
+      <root url="file://$PROJECT_DIR$" />
+      <root url="file://$PROJECT_DIR$/../../../src/github.com/go-gomail/gomail/.git" />
+      <root url="file://$PROJECT_DIR$/../../../src/github.com/scorredoira/email/.git" />
+      <root url="file://$PROJECT_DIR$/../../../src/github.com/mailgun/mailgun-go/.git" />
+      <root url="file://$PROJECT_DIR$/../../../src/github.com/mbanzon/simplehttp/.git" />
+    </excluded>
+  </library>
+</component>

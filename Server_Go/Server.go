@@ -9,7 +9,26 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"github.com/go-gomail/gomail"
 )
+
+func SendSimpleMessage(to, text, url string){
+	var cidimage = strings.Split(url,"\\")
+	fmt.Print(cidimage[len(cidimage)-1])
+	m := gomail.NewMessage()
+	m.SetHeader("From", "projectsmail02@gmail.com")
+	m.SetHeader("To", to)
+	m.SetHeader("Subject", "Hello!")
+	m.Embed(url)
+	m.SetBody("text/html","<html>  <body>"+text+"<img src=cid:"+ cidimage[len(cidimage)-1]+" style=width:128px;height:128px;>  </body></html> ")
+
+	d := gomail.NewPlainDialer("smtp.gmail.com", 587, "projectsmail02@gmail.com", "cgvm0234")
+
+	// Send the email to Bob, Cora and Dan.
+	if err := d.DialAndSend(m); err != nil {
+		panic(err)
+	}
+}
 
 const _VALID_EMAIL = `\w[-._\w]*\w@\w[-._\w]*\w\.\w{2,3}`
 const _VALID_ID = `(\d{4}\-\d{4}\-\d{5})`
@@ -63,7 +82,15 @@ type User struct  {
 
 
 func display(u User)string {
-	return "Username: " + u.Username  + " Name: " + u.Name  + " Email: " + u.Email + " ID: " + u.Id + " Birthdate: " + u.Foto + " Profile Picture: " + u.Foto +"\n"
+	return "Username: " + u.Username  + " Name: " + u.Name  + " Email: " + u.Email + " ID: " + u.Id + " Birthdate: " + u.F_nac + " Profile Picture: " + u.Foto +"\n"
+}
+
+func emailParse(u User)(string){
+return "<p>Nombre: "+ u.Name + "</p>" + "<p>User name: "+ u.Username +  "</p>" + "<p>Email: "+ u.Email + "</p>" +"<p>ID: "+  u.Id + "</p>" +"<p>Birth Date: " +u.F_nac +"</p>" + "<p>Picture: " +u.Foto+ ":" +"</p>"
+}
+
+func imgSource(u User)(string){
+	return u.Foto;
 }
 
 func Unique(users []User,param string, paramtype int ) bool{
@@ -224,6 +251,28 @@ func main() {
 					pos := SearchUser(users, search)
 					if pos >= 0 {
 						users = append(users[:pos],users[pos+1:]...)
+						conn.Write([]byte("Success \n"))
+						WriteFile(users)
+					}else{
+						conn.Write([]byte("not Found!" + "\n"))
+					}
+
+				}
+			case 4:
+				conn.Write([]byte("Enter User Name: " + "\n"))
+				search, err := bufio.NewReader(conn).ReadString('\n')
+				conn.Write([]byte("Enter Email Recipient: " + "\n"))
+				r, e := bufio.NewReader(conn).ReadString('\n')
+				fmt.Println(r);
+				if check(err) ==2 || check(e) ==2 {
+					WriteFile(users)
+					os.Exit(0)
+				}else {
+					pos := SearchUser(users, search)
+					if pos >= 0 {
+						emaildata:=emailParse(users[pos])
+						source := imgSource(users[pos])
+						SendSimpleMessage(strings.Split(r,"\r\n")[0],emaildata,source)
 						conn.Write([]byte("Success \n"))
 						WriteFile(users)
 					}else{

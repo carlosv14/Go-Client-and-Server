@@ -1,1 +1,1 @@
-[{"Username":"cvarela","Name":"carlos varela","Email":"cvarela@gmail.com","Id":"0801-1996-10897","F_nac":"14/06/1996","Foto":"C:\\images"},{"Username":"oherrera","Name":"oscar herrera","Email":"oherrera@gmail.com","Id":"0501-1980-10698","F_nac":"05/05/1980","Foto":"C:\\pictures"}]
+[{"Username":"oherrera","Name":"oscar herrera","Email":"oherrera@gmail.com","Id":"0501-1980-10698","F_nac":"05/05/1980","Foto":"file.jpg"}]
